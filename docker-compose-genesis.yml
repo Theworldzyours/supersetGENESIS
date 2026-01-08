@@ -1,0 +1,81 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Docker Compose extension for GENESIS Destatis API integration
+# 
+# This file extends docker-compose.yml to add services for:
+# - genesis-db: PostgreSQL database for storing GENESIS data
+# - genesis-loader: Service to load GENESIS data into the database
+#
+# Usage:
+#   1. Copy .env.genesis.example to .env.genesis and configure
+#   2. Start with profiles:
+#      docker compose -f docker-compose.yml -f docker-compose-genesis.yml --profile genesis up -d
+#   3. Load data:
+#      docker compose -f docker-compose.yml -f docker-compose-genesis.yml run genesis-loader
+
+services:
+  genesis-db:
+    image: postgres:15
+    container_name: superset_genesis_db
+    restart: unless-stopped
+    env_file:
+      - path: .env.genesis
+        required: false
+    environment:
+      POSTGRES_DB: genesis
+      POSTGRES_USER: genesis
+      POSTGRES_PASSWORD: genesis
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - genesis_db_home:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U genesis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - genesis
+
+  genesis-loader:
+    build:
+      context: .
+      target: dev
+    container_name: superset_genesis_loader
+    env_file:
+      - path: .env.genesis
+        required: false
+    environment:
+      SUPERSET_GENESIS_DB_URI: postgresql://genesis:genesis@genesis-db:5432/genesis
+      GENESIS_USERNAME: ${GENESIS_USERNAME:-GAST}
+      GENESIS_PASSWORD: ${GENESIS_PASSWORD:-GAST}
+      PYTHONPATH: /app
+    volumes:
+      - ./superset:/app/superset
+      - ./scripts:/app/scripts
+    command: ["python", "/app/scripts/load_genesis_data.py"]
+    depends_on:
+      genesis-db:
+        condition: service_healthy
+    profiles:
+      - genesis
+
+volumes:
+  genesis_db_home:
+    name: superset_genesis_db_home
+    external: false
