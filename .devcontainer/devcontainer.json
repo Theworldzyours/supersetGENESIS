@@ -1,15 +1,8 @@
 {
   "name": "Apache Superset Development",
-  // Option 1: Use pre-built image directly
-  // "image": "ghcr.io/apache/superset:devcontainer-base",
-
-  // Option 2: Build from Dockerfile with cache (current approach)
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".",
-    // Cache from the Apache registry image
-    "cacheFrom": ["ghcr.io/apache/superset:devcontainer-base"]
-  },
+  // Use a pre-built image to avoid building containers in Codespaces.
+  // If you need to rebuild/push the base image, see .devcontainer/build-and-push-image.sh
+  "image": "ghcr.io/apache/superset:devcontainer-base",
 
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {

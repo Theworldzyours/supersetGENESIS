@@ -30,9 +30,19 @@ The GENESIS database includes:
 - Python 3.10+ (for manual setup)
 - PostgreSQL database (provided in Docker setup)
 
-## Quick Start with Docker
+## New Features
 
-The easiest way to get started is using Docker Compose:
+This integration now includes:
+
+- **Automated Database Connection**: Superset automatically creates the GENESIS database connection on startup
+- **Data Freshness Tracking**: Monitor when data was last updated with visual indicators
+- **Table Browser UI**: Search and manage GENESIS tables through a web interface at **Data → GENESIS Data**
+- **REST API**: Programmatic access to search, refresh, and monitor GENESIS data
+- **CLI Commands**: Initialize and manage GENESIS integration from the command line
+
+## Quick Start with Docker (Automated Setup)
+
+The easiest way to get started is using Docker Compose with automatic initialization:
 
 ### 1. Configure Environment
 
@@ -63,9 +73,19 @@ docker compose -f docker-compose.yml -f docker-compose-genesis.yml --profile gen
 This will start:
 - Main Superset services
 - `genesis-db`: PostgreSQL database on port 5433
-- GENESIS database will be available for loading data
+- GENESIS database connection will be automatically created
 
-### 3. Load GENESIS Data
+### 3. Initialize GENESIS Connection (Optional)
+
+If the connection wasn't auto-created, run:
+
+```bash
+docker compose exec superset superset init-genesis
+```
+
+This CLI command creates the GENESIS database connection in Superset. The connection is created automatically on startup if `SUPERSET_GENESIS_DB_URI` is set.
+
+### 4. Load GENESIS Data
 
 Run the data loader to fetch and load statistics:
 
@@ -82,21 +102,207 @@ This will load the following tables:
 - `unemployment_statistics`: Unemployment statistics
 - `foreign_trade_statistics`: Foreign trade statistics
 
-### 4. Connect to Superset
+### 5. Browse and Use GENESIS Data
 
 1. Open Superset in your browser (default: http://localhost:8088)
-2. Go to **Data → Databases**
-3. Click **+ Database** to add a new connection
-4. Select **PostgreSQL** as the database type
-5. Enter the connection details:
+2. Go to **Data → GENESIS Data** to browse available tables
+3. Search for tables by keyword (e.g., "population", "GDP", "unemployment")
+4. View data freshness indicators and refresh data as needed
+5. The GENESIS database connection "GENESIS (German Statistics)" is already configured
+
+The database connection is automatically created at:
    ```
-   Host: genesis-db
-   Port: 5432
+   Name: GENESIS (German Statistics)
+   Type: PostgreSQL
+   Host: genesis-db:5432
    Database: genesis
-   Username: genesis
-   Password: genesis
    ```
-   Or use the SQLAlchemy URI:
+
+### 6. Create Datasets and Charts
+
+From the loaded tables:
+1. Go to **Data → Datasets**
+2. Click **+ Dataset**
+3. Select database: "GENESIS (German Statistics)"
+4. Choose a table (e.g., `population_germany`)
+5. Click **Create Dataset and Create Chart**
+
+---
+
+## Using the GENESIS Data Browser
+
+Navigate to **Data → GENESIS Data** to access the table browser:
+
+### Features
+
+- **Search**: Find tables by keyword (e.g., "population", "GDP")
+- **Status Indicators**:
+  - 🟢 **Up to date**: Data < 30 days old
+  - 🔵 **Moderately old**: Data 30-90 days old
+  - 🟡 **Stale**: Data > 90 days old
+  - 🔴 **Failed**: Load error
+- **Refresh**: Click refresh button to update loaded tables
+- **Record Counts**: See number of records in each table
+- **Error Messages**: View detailed error information for failed loads
+
+### Searching for Tables
+
+```
+Search terms examples:
+- "population" → Find population statistics
+- "GDP" → Economic indicators
+- "unemployment" → Labor market data
+- "12411" → Search by table code
+```
+
+---
+
+## REST API Endpoints
+
+The GENESIS integration provides REST API endpoints for programmatic access:
+
+### Get All Table Metadata
+
+```bash
+GET /api/v1/genesis/metadata
+```
+
+Returns list of all loaded tables with freshness information.
+
+**Response:**
+```json
+{
+  "count": 7,
+  "result": [
+    {
+      "table_code": "12411-0001",
+      "table_name": "population_germany",
+      "description": "Population of Germany",
+      "last_updated": "2026-01-09T14:30:00",
+      "record_count": 150,
+      "status": "success",
+      "age_days": 0,
+      "is_stale": false
+    }
+  ]
+}
+```
+
+### Get Single Table Metadata
+
+```bash
+GET /api/v1/genesis/metadata/<table_code>
+```
+
+Example: `GET /api/v1/genesis/metadata/12411-0001`
+
+### Search GENESIS Tables
+
+```bash
+GET /api/v1/genesis/search?q=<search_term>
+```
+
+Example: `GET /api/v1/genesis/search?q=population`
+
+**Response:**
+```json
+{
+  "count": 15,
+  "result": [
+    {
+      "code": "12411-0001",
+      "description": "Population: Germany",
+      "updated": "2023-12-31"
+    }
+  ]
+}
+```
+
+### Refresh Table Data
+
+```bash
+POST /api/v1/genesis/refresh/<table_code>
+```
+
+Example: `POST /api/v1/genesis/refresh/12411-0001`
+
+Fetches latest data from GENESIS API and updates the database.
+
+---
+
+## CLI Commands
+
+### Initialize GENESIS Connection
+
+```bash
+superset init-genesis
+```
+
+Creates the GENESIS database connection in Superset. Safe to run multiple times (idempotent).
+
+### Load Specific Tables
+
+Load only specific tables by code:
+
+```bash
+# Inside container
+python /app/scripts/load_genesis_data.py --tables 12411-0001,81000-0001
+
+# Or with Docker
+docker compose exec superset python /app/scripts/load_genesis_data.py --tables 12411-0001
+```
+
+---
+
+## Manual Setup (Without Docker)
+
+If you prefer not to use Docker:
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements/genesis.txt
+```
+
+### 2. Set Environment Variables
+
+```bash
+export SUPERSET_GENESIS_DB_URI="postgresql://user:pass@localhost:5432/genesis"
+export GENESIS_USERNAME="GAST"
+export GENESIS_PASSWORD="GAST"
+```
+
+### 3. Run Database Migration
+
+```bash
+superset db upgrade
+```
+
+This creates the `genesis_table_metadata` table for tracking data freshness.
+
+### 4. Initialize Connection
+
+```bash
+superset init-genesis
+```
+
+### 5. Load Data
+
+```bash
+python scripts/load_genesis_data.py
+```
+
+---
+
+## Legacy Instructions (Manual Database Connection)
+
+If you need to manually create the database connection:
+
+1. Open Superset in your browser
+2. Go to **Data → Databases**
+3. Click **+ Database**
+4. Select **PostgreSQL**
+5. Enter connection details:
    ```
    postgresql://genesis:genesis@genesis-db:5432/genesis
    ```

@@ -172,6 +172,7 @@ class SupersetAppInitializer:  # pylint: disable=too-many-public-methods
         from superset.explore.form_data.api import ExploreFormDataRestApi
         from superset.explore.permalink.api import ExplorePermalinkRestApi
         from superset.extensions.view import ExtensionsView
+        from superset.genesis.api import GenesisRestApi
         from superset.importexport.api import ImportExportRestApi
         from superset.queries.api import QueryRestApi
         from superset.queries.saved_queries.api import SavedQueryRestApi
@@ -259,6 +260,7 @@ class SupersetAppInitializer:  # pylint: disable=too-many-public-methods
         appbuilder.add_api(ExploreRestApi)
         appbuilder.add_api(ExploreFormDataRestApi)
         appbuilder.add_api(ExplorePermalinkRestApi)
+        appbuilder.add_api(GenesisRestApi)
         appbuilder.add_api(ImportExportRestApi)
         appbuilder.add_api(QueryRestApi)
         appbuilder.add_api(ReportScheduleRestApi)
@@ -294,6 +296,14 @@ class SupersetAppInitializer:  # pylint: disable=too-many-public-methods
             "Databases",
             label=_("Database Connections"),
             icon="fa-database",
+            category="Data",
+            category_label=_("Data"),
+        )
+        appbuilder.add_link(
+            "GENESIS Data",
+            label=_("GENESIS Data"),
+            href=f"{app_root}/genesis/browser/",
+            icon="fa-flag",
             category="Data",
             category_label=_("Data"),
         )

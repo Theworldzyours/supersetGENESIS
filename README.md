@@ -149,6 +149,48 @@ Here are some of the major database solutions that are supported:
 
 Want to add support for your datastore or data engine? Read more [here](https://superset.apache.org/docs/frequently-asked-questions#does-superset-work-with-insert-database-engine-here) about the technical requirements.
 
+## GENESIS Integration
+
+Superset includes built-in support for the **GENESIS database** from the German Federal Statistical Office (Destatis), providing access to official German statistics including population data, economic indicators, labor market data, and more.
+
+### Features
+
+- 🇩🇪 Direct access to official German Federal Statistical Office data
+- 🔄 Automated data loading and refresh capabilities
+- 🔍 Search and browse available GENESIS tables
+- 📊 Data freshness tracking with automatic staleness detection
+- 🎨 Beautiful visualizations of German economic and demographic data
+
+### Quick Start with Docker
+
+```bash
+# 1. Start Superset with GENESIS profile
+docker compose -f docker-compose.yml -f docker-compose-genesis.yml --profile genesis up -d
+
+# 2. Initialize GENESIS connection (first time only)
+docker compose exec superset superset init-genesis
+
+# 3. Load German statistics data
+docker compose run genesis-loader
+
+# 4. Open Superset and navigate to Data → GENESIS Data
+```
+
+### What's Included
+
+The integration provides access to commonly-used German statistics:
+
+- Population data (by state, demographics)
+- Gross Domestic Product (GDP) - quarterly and annual
+- Consumer Price Index (CPI/Inflation)
+- Employment statistics by sector
+- Unemployment data
+- Foreign trade statistics
+
+### Documentation
+
+For detailed setup instructions, API documentation, and usage guides, see [docs/docs/genesis-integration.md](docs/docs/genesis-integration.md).
+
 ## Installation and Configuration
 
 Try out Superset's [quickstart](https://superset.apache.org/docs/quickstart/) guide or learn about [the options for production deployments](https://superset.apache.org/docs/installation/architecture/).

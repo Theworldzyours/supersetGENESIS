@@ -16,19 +16,52 @@
 #
 
 # Docker Compose extension for GENESIS Destatis API integration
-# 
+#
 # This file extends docker-compose.yml to add services for:
 # - genesis-db: PostgreSQL database for storing GENESIS data
 # - genesis-loader: Service to load GENESIS data into the database
+# - Extends superset services with GENESIS environment variables
 #
 # Usage:
 #   1. Copy .env.genesis.example to .env.genesis and configure
 #   2. Start with profiles:
 #      docker compose -f docker-compose.yml -f docker-compose-genesis.yml --profile genesis up -d
-#   3. Load data:
+#   3. Initialize GENESIS connection in Superset:
+#      docker compose -f docker-compose.yml -f docker-compose-genesis.yml exec superset superset init-genesis
+#   4. Load GENESIS data:
 #      docker compose -f docker-compose.yml -f docker-compose-genesis.yml run genesis-loader
+#
+# For automatic initialization on startup, the superset service will check for
+# SUPERSET_GENESIS_DB_URI and automatically create the database connection.
 
 services:
+  superset:
+    env_file:
+      - path: .env.genesis
+        required: false
+    environment:
+      SUPERSET_GENESIS_DB_URI: postgresql://genesis:genesis@genesis-db:5432/genesis
+      GENESIS_USERNAME: ${GENESIS_USERNAME:-GAST}
+      GENESIS_PASSWORD: ${GENESIS_PASSWORD:-GAST}
+
+  superset-worker:
+    env_file:
+      - path: .env.genesis
+        required: false
+    environment:
+      SUPERSET_GENESIS_DB_URI: postgresql://genesis:genesis@genesis-db:5432/genesis
+      GENESIS_USERNAME: ${GENESIS_USERNAME:-GAST}
+      GENESIS_PASSWORD: ${GENESIS_PASSWORD:-GAST}
+
+  superset-worker-beat:
+    env_file:
+      - path: .env.genesis
+        required: false
+    environment:
+      SUPERSET_GENESIS_DB_URI: postgresql://genesis:genesis@genesis-db:5432/genesis
+      GENESIS_USERNAME: ${GENESIS_USERNAME:-GAST}
+      GENESIS_PASSWORD: ${GENESIS_PASSWORD:-GAST}
+
   genesis-db:
     image: postgres:15
     container_name: superset_genesis_db
@@ -72,6 +105,31 @@ services:
     depends_on:
       genesis-db:
         condition: service_healthy
+    restart: "no"  # Only run once, not a long-running service
+    profiles:
+      - genesis
+
+  genesis-init:
+    build:
+      context: .
+      target: dev
+    container_name: superset_genesis_init
+    env_file:
+      - path: .env.genesis
+        required: false
+    environment:
+      SUPERSET_GENESIS_DB_URI: postgresql://genesis:genesis@genesis-db:5432/genesis
+      GENESIS_USERNAME: ${GENESIS_USERNAME:-GAST}
+      GENESIS_PASSWORD: ${GENESIS_PASSWORD:-GAST}
+    volumes:
+      - ./superset:/app/superset
+    command: ["superset", "init-genesis"]
+    depends_on:
+      superset:
+        condition: service_healthy
+      genesis-db:
+        condition: service_healthy
+    restart: "no"  # Only run once to initialize
     profiles:
       - genesis
 

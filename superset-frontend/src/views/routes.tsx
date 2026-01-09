@@ -92,6 +92,13 @@ const DatasetCreation = lazy(
     ),
 );
 
+const GenesisBrowser = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "GenesisBrowser" */ 'src/pages/GenesisBrowser'
+    ),
+);
+
 const ExecutionLogList = lazy(
   () =>
     import(
@@ -222,6 +229,10 @@ export const routes: Routes = [
   {
     path: '/databaseview/list/',
     Component: DatabaseList,
+  },
+  {
+    path: '/genesis/browser/',
+    Component: GenesisBrowser,
   },
   {
     path: '/savedqueryview/list/',
