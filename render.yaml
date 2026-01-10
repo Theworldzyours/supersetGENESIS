@@ -42,6 +42,6 @@ services:
 databases:
   # PostgreSQL database for Superset metadata
   - name: superset-db
-    plan: starter
+    plan: basic-256mb
     databaseName: superset
     user: superset
