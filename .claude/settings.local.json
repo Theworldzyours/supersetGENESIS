@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker compose:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat\\(genesis\\): Complete GENESIS Destatis integration for German statistics\n\nImplements comprehensive integration with German Federal Statistical Office \\(Destatis\\)\nGENESIS database, enabling visualization of official German statistics in Superset.\n\n## Features Added\n\n### Backend\n- Automated database connection setup with CLI command `superset init-genesis`\n- Data freshness tracking with metadata table and migration\n- REST API endpoints for search, metadata, and refresh operations\n- Enhanced data loader with timestamp tracking and selective table loading\n- Docker Compose profile for easy deployment\n\n### Frontend\n- React-based Table Browser UI at Data → GENESIS Data\n- Search functionality for discovering GENESIS tables\n- Color-coded freshness indicators \\(green/blue/yellow/red\\)\n- Real-time data refresh capability\n- Full TypeScript implementation with proper types\n\n### API Endpoints\n- GET /api/v1/genesis/metadata - List all tables with freshness info\n- GET /api/v1/genesis/metadata/<code> - Get single table metadata\n- GET /api/v1/genesis/search?q=<term> - Search GENESIS database\n- POST /api/v1/genesis/refresh/<code> - Refresh table data\n\n### Documentation\n- Updated README with GENESIS section and quick start\n- Enhanced integration guide with new features\n- New end-user guide with tutorials and best practices\n\n## Implementation Details\n\n- 18 new files \\(backend, frontend, documentation\\)\n- 4 modified files \\(routes, initialization, loader, README\\)\n- ~3000 lines of code\n- Full TypeScript with no any types\n- Follows Superset design patterns and best practices\n- Production-ready with error handling and logging\n\n## Usage\n\ndocker compose -f docker-compose.yml -f docker-compose-genesis.yml --profile genesis up -d\ndocker compose exec superset superset init-genesis\ndocker compose run genesis-loader\n\nThen navigate to Data → GENESIS Data in Superset UI.\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(gh auth:*)",
+      "Bash(git config --global credential.helper '!f\\(\\) { echo \"\"username=${GITHUB_USER}\"\"; echo \"\"password=${GITHUB_TOKEN}\"\"; }; f')",
+      "Bash(echo $GITHUB_TOKEN)"
+    ]
+  }
+}

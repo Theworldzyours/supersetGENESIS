@@ -21,7 +21,7 @@
     }
   },
 
-  // Run commands after container is created
+  // Run commands after container is created (coding tools only - no service startup)
   "postCreateCommand": "chmod +x .devcontainer/setup-dev.sh && .devcontainer/setup-dev.sh",
 
   // VS Code customizations

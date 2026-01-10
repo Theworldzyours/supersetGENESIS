@@ -1,30 +1,101 @@
-# Deploying Superset on Render (Docker)
+# Deploying Superset on Render
 
-This repository includes a production Dockerfile at `./Dockerfile`. Render can build and run it directly.
+This repository includes a production Dockerfile and `render.yaml` blueprint. **Render builds the Docker image on their infrastructure** - you don't need Docker locally.
 
-## Quick setup
+## Quick Deploy Methods
 
-1. **Create a Postgres database** in Render (metadata DB).
-2. **Create a Web Service** in Render:
+### Method 1: Blueprint (Recommended)
+Uses the `render.yaml` file to deploy everything at once:
+
+```bash
+# 1. Authenticate Render CLI (see below)
+render login  # or set RENDER_API_KEY
+
+# 2. Deploy from blueprint
+render blueprint apply --file render.yaml
+```
+
+This creates:
+- PostgreSQL database (`superset-db`)
+- Web service with auto-generated `SUPERSET_SECRET_KEY`
+- Health check at `/health`
+- 1GB persistent disk
+
+### Method 2: Manual Dashboard Setup
+1. Go to https://dashboard.render.com
+2. Click **New +** → **Blueprint**
+3. Connect your repo
+4. Select `render.yaml`
+5. Render will automatically provision everything
+
+### Method 3: Manual Web Service
+1. **Create a PostgreSQL database** in Render Dashboard
+2. **Create a Web Service**:
    - Environment: **Docker**
    - Repository: this repo
    - Dockerfile path: `Dockerfile`
-   - Health check path (recommended): `/health`
-3. Set these Render environment variables on the Web Service:
-   - `SUPERSET_SECRET_KEY`: strong random value (required)
-   - `SUPERSET__SQLALCHEMY_DATABASE_URI`: your Render Postgres connection URI (required)
+   - Health check path: `/health`
+3. Set environment variables:
+   - `SUPERSET_SECRET_KEY`: generate with `openssl rand -base64 42`
+   - `SUPERSET__SQLALCHEMY_DATABASE_URI`: your Postgres connection string
 
-If you don’t set `SUPERSET__SQLALCHEMY_DATABASE_URI`, Superset will fall back to a local SQLite DB inside the container, which is not recommended for production.
+## Render CLI Authentication
 
-## One-time initialization (use Render Shell / “Debug” console)
+Render CLI is used for **deployment management**, not building. Builds happen on Render's servers.
 
-The Docker image starts Gunicorn but does **not** automatically migrate/init the metadata DB. After the service builds and starts (or if it crash-loops due to missing tables), open the service’s Shell/Console and run:
+**Option A - Device code (interactive):**
+```bash
+render login
+# Opens browser to authorize
+```
 
-- `superset db upgrade`
-- `superset init`
-- `superset fab create-admin`
+**Option B - API key (for CI/CD):**
+```bash
+# Get API key from: https://dashboard.render.com/u/settings#api-keys
+export RENDER_API_KEY=rnd_YOUR_KEY_HERE
+render whoami  # verify
+```
 
-Then redeploy/restart the service.
+## Post-Deploy: Database Initialization
+
+After Render builds and starts your service (or if it crash-loops due to missing tables):
+
+1. Open **Shell** in the Render Dashboard (service page → Shell tab)
+2. Run initialization commands:
+   ```bash
+   superset db upgrade
+   superset init
+   superset fab create-admin
+   ```
+3. Restart the service
+
+Alternatively, use Render CLI:
+```bash
+# Get service ID
+render services
+
+# Open shell
+render ssh <SERVICE_ID>
+
+# Then run the commands above
+```
+
+## Useful Render CLI Commands
+
+```bash
+# Check deployment status
+render services
+render deploys list <SERVICE_ID>
+
+# View logs
+render logs <SERVICE_ID>
+
+# Trigger manual deploy
+render deploys create <SERVICE_ID>
+
+# Open shell session
+render ssh <SERVICE_ID>
+```
 
 ## Debugging checklist (Render build + runtime logs)
 

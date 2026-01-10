@@ -25,8 +25,8 @@ echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.zshrc
 echo "🤖 Installing Claude Code..."
 npm install -g @anthropic-ai/claude-code
 
-# Make the start script executable
-chmod +x .devcontainer/start-superset.sh
+# Note: start-superset.sh exists but is not used in this Codespace
+# This environment is for coding only - services run on external infrastructure
 
 echo "✅ Development environment setup complete!"
-echo "🚀 Run '.devcontainer/start-superset.sh' to start Superset"
+echo "📝 This Codespace is for coding only - deploy to Render to run services"
