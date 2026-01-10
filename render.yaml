@@ -8,7 +8,7 @@ services:
     name: superset
     runtime: docker
     dockerfilePath: ./Dockerfile
-    # Use the lean target for production
+    plan: standard
     dockerCommand: ""
     healthCheckPath: /health
     envVars:
@@ -26,22 +26,22 @@ services:
         value: production
       - key: SUPERSET_PORT
         value: "8088"
-      # Gunicorn workers (adjust based on instance size)
+      # Scaled for Standard plan (4 CPU / 4GB RAM)
       - key: SERVER_WORKER_AMOUNT
-        value: "2"
+        value: "4"
       - key: SERVER_THREADS_AMOUNT
         value: "4"
       - key: GUNICORN_TIMEOUT
         value: "120"
-    # Disk for any persistent storage needs
+    # Persistent disk for uploads/cache
     disk:
       name: superset-data
       mountPath: /app/superset_home
-      sizeGB: 1
+      sizeGB: 10
 
 databases:
-  # PostgreSQL database for Superset metadata
+  # PostgreSQL database for Superset metadata - production tier
   - name: superset-db
-    plan: starter
+    plan: standard
     databaseName: superset
     user: superset
