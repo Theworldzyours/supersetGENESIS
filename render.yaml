@@ -8,7 +8,7 @@ services:
     name: superset
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: standard
+    plan: starter
     dockerCommand: ""
     healthCheckPath: /health
     envVars:
@@ -26,9 +26,9 @@ services:
         value: production
       - key: SUPERSET_PORT
         value: "8088"
-      # Scaled for Standard plan (4 CPU / 4GB RAM)
+      # Scaled for Starter plan (512MB RAM)
       - key: SERVER_WORKER_AMOUNT
-        value: "4"
+        value: "2"
       - key: SERVER_THREADS_AMOUNT
         value: "4"
       - key: GUNICORN_TIMEOUT
@@ -37,11 +37,11 @@ services:
     disk:
       name: superset-data
       mountPath: /app/superset_home
-      sizeGB: 10
+      sizeGB: 1
 
 databases:
-  # PostgreSQL database for Superset metadata - production tier
+  # PostgreSQL database for Superset metadata
   - name: superset-db
-    plan: standard
+    plan: starter
     databaseName: superset
     user: superset
