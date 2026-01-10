@@ -1,19 +1,19 @@
 # Render Blueprint for Apache Superset
-# Deploy using: render blueprint apply
+# Uses pre-built image from GitHub Container Registry (no build on Render)
+# Image is built by GitHub Actions on push to master
 # Docs: https://render.com/docs/blueprint-spec
 
 services:
-  # Main Superset web service
+  # Main Superset web service - pulls pre-built image
   - type: web
     name: superset
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: image
+    image:
+      url: ghcr.io/theworldzyours/supersetgenesis:latest
     plan: starter
-    dockerCommand: ""
     healthCheckPath: /health
     envVars:
       # Required: Generate a strong secret key
-      # Use: openssl rand -base64 42
       - key: SUPERSET_SECRET_KEY
         generateValue: true
       # Database connection - uses the attached PostgreSQL
@@ -26,7 +26,7 @@ services:
         value: production
       - key: SUPERSET_PORT
         value: "8088"
-      # Scaled for Starter plan (512MB RAM)
+      # Workers for Starter plan
       - key: SERVER_WORKER_AMOUNT
         value: "2"
       - key: SERVER_THREADS_AMOUNT
